@@ -1,0 +1,35 @@
+{
+  "sidebar": {
+    "home": "Home",
+    "scans": "Scans",
+    "patients": "Patients",
+    "camera": "Camera Test",
+    "notes": "Notes",
+    "report": "Report",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "settings": {
+    "title": "Account Settings",
+    "profile": "Profile",
+    "password": "Change Password",
+    "notifications": "Notifications",
+    "appearance": "Appearance",
+    "language": "Language",
+
+    "save": "Save Changes",
+    "saveLanguage": "Save Language",
+
+    "fullName": "Full Name",
+    "speciality": "Speciality",
+    "email": "Email",
+    "phone": "Phone",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+
+    "chooseLang": "Choose Interface Language",
+    "arabic": "🇸🇦 Arabic",
+    "english": "🇺🇸 English"
+  }
+}

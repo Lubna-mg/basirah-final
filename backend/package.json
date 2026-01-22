@@ -1,0 +1,29 @@
+{
+  "name": "basira-backend",
+  "version": "1.0.0",
+  "description": "Basira platform backend",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "debug": "^4.4.3",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "express-validator": "^7.3.1",
+    "helmet": "^8.1.0",
+    "html2pdf.js": "^0.12.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.21.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "pdfkit": "^0.17.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
