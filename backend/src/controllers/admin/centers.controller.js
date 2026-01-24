@@ -15,7 +15,7 @@ export async function listCenters(req, res) {
         id: c._id,
         name: c.name,
         city: c.city,
-        address: "-", // غير مستخدم حاليًا
+        address: "-",
         contactEmail: c.email,
         contactPhone: c.phone,
         subscriptionPlan: c.subscriptionPlan || "تجريبي",
@@ -35,12 +35,29 @@ export async function listCenters(req, res) {
 ======================= */
 export async function createCenter(req, res) {
   try {
-    const { name, city, contactEmail, contactPhone } = req.body;
+    let { name, city, contactEmail, contactPhone } = req.body;
 
-    // تحقق أساسي
+    // ✅ تحقق أساسي
     if (!name || !contactEmail || !contactPhone) {
       return res.status(400).json({
         message: "اسم المركز والبريد الإلكتروني ورقم الهاتف مطلوبة",
+      });
+    }
+
+    // ✅ تنظيف البيانات (مهم جدًا)
+    name = name.trim();
+    contactEmail = contactEmail.toLowerCase().trim();
+    contactPhone = contactPhone.trim();
+    city = city?.trim() || "";
+
+    // ✅ منع التكرار بشكل واضح
+    const existingCenter = await Center.findOne({
+      $or: [{ email: contactEmail }, { phone: contactPhone }],
+    });
+
+    if (existingCenter) {
+      return res.status(409).json({
+        message: "البريد الإلكتروني أو رقم الهاتف مستخدم مسبقًا",
       });
     }
 
@@ -55,10 +72,13 @@ export async function createCenter(req, res) {
       email: contactEmail,
       phone: contactPhone,
       city,
-      password: hashedPassword,      // ✅ الآن موجودة
-      mustChangePassword: true,       // ✅ تغييرها أول دخول
+
+      password: hashedPassword,
+      mustChangePassword: true,
+
       status: "بانتظار التفعيل",
       subscriptionPlan: "تجريبي",
+
       notifications: {
         reports: true,
         sessions: true,
@@ -67,7 +87,7 @@ export async function createCenter(req, res) {
       },
     });
 
-    // تسجيل نشاط
+    // 📝 تسجيل نشاط
     try {
       await Activity.create({
         text: `تم إضافة مركز جديد: ${center.name}`,
@@ -76,13 +96,6 @@ export async function createCenter(req, res) {
       console.warn("Activity log failed (createCenter):", logError.message);
     }
 
-    /**
-     * ⚠️ ملاحظة:
-     * tempPassword تُرجع مؤقتًا للاختبار فقط
-     * في الإنتاج الحقيقي:
-     * - تُرسل عبر إيميل
-     * - أو رابط تفعيل
-     */
     return res.status(201).json({
       id: center._id,
       name: center.name,
@@ -95,7 +108,7 @@ export async function createCenter(req, res) {
       status: center.status,
       createdAt: center.createdAt,
 
-      // 🔑 مؤقت (احذفيه لاحقًا)
+      // ⚠️ مؤقت للاختبار فقط
       tempPassword,
     });
   } catch (err) {
@@ -112,19 +125,21 @@ export async function createCenter(req, res) {
 export async function updateCenter(req, res) {
   try {
     const { id } = req.params;
-    const { name, city, contactEmail, contactPhone, status } = req.body;
+    let { name, city, contactEmail, contactPhone, status } = req.body;
 
-    const center = await Center.findByIdAndUpdate(
-      id,
-      {
-        name,
-        city,
-        email: contactEmail,
-        phone: contactPhone,
-        status,
-      },
-      { new: true, runValidators: true }
-    );
+    const updateData = {};
+
+    if (name) updateData.name = name.trim();
+    if (city) updateData.city = city.trim();
+    if (contactEmail)
+      updateData.email = contactEmail.toLowerCase().trim();
+    if (contactPhone) updateData.phone = contactPhone.trim();
+    if (status) updateData.status = status;
+
+    const center = await Center.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!center) {
       return res.status(404).json({ message: "المركز غير موجود" });
