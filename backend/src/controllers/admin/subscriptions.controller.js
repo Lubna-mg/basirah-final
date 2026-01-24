@@ -11,21 +11,29 @@ export const getSubscriptionsSummary = async (req, res) => {
 
     const totalCenters = subs.length;
 
+    const activeCenters = subs.filter(
+      (s) => s.status === "active"
+    ).length;
+
+    const pendingCenters = subs.filter(
+      (s) => s.status === "pending"
+    ).length;
+
+    const suspendedCenters = subs.filter(
+      (s) => s.status === "suspended"
+    ).length;
+
     const planCounts = subs.reduce((acc, s) => {
       acc[s.plan] = (acc[s.plan] || 0) + 1;
       return acc;
     }, {});
 
-    const activeCenters = subs.filter(s => s.status === "active").length;
-    const pendingCenters = subs.filter(s => s.status === "pending").length;
-    const suspendedCenters = subs.filter(s => s.status === "suspended").length;
-
     res.json({
       totalCenters,
-      planCounts,
       activeCenters,
       pendingCenters,
       suspendedCenters,
+      planCounts,
     });
   } catch (err) {
     console.error("getSubscriptionsSummary error:", err);
@@ -44,9 +52,9 @@ export const getSubscriptionsList = async (req, res) => {
       .sort({ createdAt: -1 });
 
     const data = subs.map((s) => ({
-      id: s._id,
+      id: s._id, // subscriptionId (مهم)
       centerId: s.center?._id,
-      name: s.center?.name || "—",
+      centerName: s.center?.name || "—",
       city: s.center?.city || "—",
       plan: s.plan,
       status: s.status,
@@ -62,14 +70,14 @@ export const getSubscriptionsList = async (req, res) => {
 };
 
 /* ======================================================
-   PUT /api/v1/admin/subscriptions/:centerId/activate
-   تفعيل اشتراك (شهري / سنوي)
+   PUT /api/v1/admin/subscriptions/:id/activate
+   تفعيل الاشتراك (باستخدام subscriptionId)
 ====================================================== */
 export const activateSubscription = async (req, res) => {
   try {
-    const { centerId } = req.params;
+    const { id } = req.params; // subscriptionId
 
-    const sub = await Subscription.findOne({ center: centerId });
+    const sub = await Subscription.findById(id).populate("center");
     if (!sub) {
       return res.status(404).json({ message: "الاشتراك غير موجود" });
     }
@@ -91,9 +99,9 @@ export const activateSubscription = async (req, res) => {
 
     await sub.save();
 
-    // 🔥 أهم خطوة: تحديث المركز
+    // تحديث بيانات المركز المرتبط
     await Center.findByIdAndUpdate(
-      centerId,
+      sub.center._id,
       {
         status: "active",
         subscriptionPlan:
@@ -107,7 +115,9 @@ export const activateSubscription = async (req, res) => {
       { new: true }
     );
 
-    res.json({ message: "تم تفعيل الاشتراك بنجاح" });
+    res.json({
+      message: "تم تفعيل الاشتراك بنجاح",
+    });
   } catch (err) {
     console.error("activateSubscription error:", err);
     res.status(500).json({ message: "فشل تفعيل الاشتراك" });
@@ -115,14 +125,14 @@ export const activateSubscription = async (req, res) => {
 };
 
 /* ======================================================
-   PUT /api/v1/admin/subscriptions/:centerId/reset-trial
-   إرجاع الاشتراك إلى تجريبي
+   PUT /api/v1/admin/subscriptions/:id/reset-trial
+   إعادة الاشتراك إلى تجريبي
 ====================================================== */
 export const resetSubscriptionToTrial = async (req, res) => {
   try {
-    const { centerId } = req.params;
+    const { id } = req.params; // subscriptionId
 
-    const sub = await Subscription.findOne({ center: centerId });
+    const sub = await Subscription.findById(id).populate("center");
     if (!sub) {
       return res.status(404).json({ message: "الاشتراك غير موجود" });
     }
@@ -135,7 +145,7 @@ export const resetSubscriptionToTrial = async (req, res) => {
     await sub.save();
 
     await Center.findByIdAndUpdate(
-      centerId,
+      sub.center._id,
       {
         status: "active",
         subscriptionPlan: "تجريبي",
@@ -144,7 +154,9 @@ export const resetSubscriptionToTrial = async (req, res) => {
       { new: true }
     );
 
-    res.json({ message: "تم إرجاع الاشتراك إلى تجريبي" });
+    res.json({
+      message: "تم إرجاع الاشتراك إلى تجريبي",
+    });
   } catch (err) {
     console.error("resetSubscriptionToTrial error:", err);
     res.status(500).json({ message: "فشل إرجاع الاشتراك للتجريبي" });
