@@ -1,10 +1,15 @@
 import { Router } from "express";
-import { loginCenter } from "../../controllers/center/auth.controller.js";
-import { body, validationResult } from "express-validator"; // للتحقق من صحة المدخلات
+import {
+  loginCenter,
+  changeCenterPassword,
+} from "../../controllers/center/auth.controller.js";
+import { body, validationResult } from "express-validator";
 
 const router = Router();
 
-// إضافة التحقق من المدخلات
+/* =======================
+   تسجيل دخول المركز
+======================= */
 router.post(
   "/login",
   [
@@ -12,17 +17,42 @@ router.post(
     body("password").notEmpty().withMessage("كلمة المرور مطلوبة"),
   ],
   async (req, res, next) => {
-    // التحقق من الأخطاء في المدخلات
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
     try {
-      // توجيه الطلب إلى loginCenter بعد التحقق من المدخلات
       await loginCenter(req, res);
     } catch (error) {
-      next(error);  // في حال وجود أي خطأ، نمرره إلى الـ errorHandler
+      next(error);
+    }
+  }
+);
+
+/* =======================
+   تغيير كلمة المرور (أول دخول)
+======================= */
+router.post(
+  "/change-password",
+  [
+    body("centerId")
+      .notEmpty()
+      .withMessage("معرّف المركز مطلوب"),
+    body("newPassword")
+      .isLength({ min: 8 })
+      .withMessage("كلمة المرور يجب أن تكون 8 أحرف على الأقل"),
+  ],
+  async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      await changeCenterPassword(req, res);
+    } catch (error) {
+      next(error);
     }
   }
 );

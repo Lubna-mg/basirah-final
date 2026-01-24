@@ -1,5 +1,7 @@
 import Center from "../../models/Center.js";
 import Activity from "../../models/Activity.js";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 /* =======================
    جلب جميع المراكز
@@ -13,12 +15,12 @@ export async function listCenters(req, res) {
         id: c._id,
         name: c.name,
         city: c.city,
-        address: "-", // غير موجود في الموديل
-        contactEmail: c.email,   // 🔥 تحويل من model
-        contactPhone: c.phone,   // 🔥 تحويل من model
-        subscriptionPlan: "تجريبي", // غير موجود في الموديل الحالي
-        subscriptionEndDate: null,
-        status: "بانتظار التفعيل",
+        address: "-", // غير مستخدم حاليًا
+        contactEmail: c.email,
+        contactPhone: c.phone,
+        subscriptionPlan: c.subscriptionPlan || "تجريبي",
+        subscriptionEndDate: c.subscriptionEndDate || null,
+        status: c.status,
         createdAt: c.createdAt,
       })),
     });
@@ -29,16 +31,11 @@ export async function listCenters(req, res) {
 }
 
 /* =======================
-   إضافة مركز جديد
+   إضافة مركز جديد (بكلمة مرور تلقائية)
 ======================= */
 export async function createCenter(req, res) {
   try {
-    const {
-      name,
-      city,
-      contactEmail,
-      contactPhone,
-    } = req.body;
+    const { name, city, contactEmail, contactPhone } = req.body;
 
     // تحقق أساسي
     if (!name || !contactEmail || !contactPhone) {
@@ -47,11 +44,21 @@ export async function createCenter(req, res) {
       });
     }
 
+    // 🔐 توليد كلمة مرور مؤقتة
+    const tempPassword = crypto.randomBytes(6).toString("hex");
+
+    // 🔒 تشفير كلمة المرور
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
     const center = await Center.create({
       name,
-      email: contactEmail,   // ✅ مطابق للموديل
-      phone: contactPhone,   // ✅ مطابق للموديل
+      email: contactEmail,
+      phone: contactPhone,
       city,
+      password: hashedPassword,      // ✅ الآن موجودة
+      mustChangePassword: true,       // ✅ تغييرها أول دخول
+      status: "بانتظار التفعيل",
+      subscriptionPlan: "تجريبي",
       notifications: {
         reports: true,
         sessions: true,
@@ -60,7 +67,7 @@ export async function createCenter(req, res) {
       },
     });
 
-    // تسجيل نشاط (غير إجباري)
+    // تسجيل نشاط
     try {
       await Activity.create({
         text: `تم إضافة مركز جديد: ${center.name}`,
@@ -69,6 +76,13 @@ export async function createCenter(req, res) {
       console.warn("Activity log failed (createCenter):", logError.message);
     }
 
+    /**
+     * ⚠️ ملاحظة:
+     * tempPassword تُرجع مؤقتًا للاختبار فقط
+     * في الإنتاج الحقيقي:
+     * - تُرسل عبر إيميل
+     * - أو رابط تفعيل
+     */
     return res.status(201).json({
       id: center._id,
       name: center.name,
@@ -76,10 +90,13 @@ export async function createCenter(req, res) {
       address: "-",
       contactEmail: center.email,
       contactPhone: center.phone,
-      subscriptionPlan: "تجريبي",
-      subscriptionEndDate: null,
-      status: "بانتظار التفعيل",
+      subscriptionPlan: center.subscriptionPlan,
+      subscriptionEndDate: center.subscriptionEndDate,
+      status: center.status,
       createdAt: center.createdAt,
+
+      // 🔑 مؤقت (احذفيه لاحقًا)
+      tempPassword,
     });
   } catch (err) {
     console.error("createCenter error:", err);
@@ -95,12 +112,7 @@ export async function createCenter(req, res) {
 export async function updateCenter(req, res) {
   try {
     const { id } = req.params;
-    const {
-      name,
-      city,
-      contactEmail,
-      contactPhone,
-    } = req.body;
+    const { name, city, contactEmail, contactPhone, status } = req.body;
 
     const center = await Center.findByIdAndUpdate(
       id,
@@ -109,6 +121,7 @@ export async function updateCenter(req, res) {
         city,
         email: contactEmail,
         phone: contactPhone,
+        status,
       },
       { new: true, runValidators: true }
     );
@@ -132,9 +145,9 @@ export async function updateCenter(req, res) {
       address: "-",
       contactEmail: center.email,
       contactPhone: center.phone,
-      subscriptionPlan: "تجريبي",
-      subscriptionEndDate: null,
-      status: "بانتظار التفعيل",
+      subscriptionPlan: center.subscriptionPlan,
+      subscriptionEndDate: center.subscriptionEndDate,
+      status: center.status,
       createdAt: center.createdAt,
     });
   } catch (err) {

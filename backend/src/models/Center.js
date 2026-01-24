@@ -61,10 +61,11 @@ const centerSchema = new mongoose.Schema(
     /* ===== أمان ===== */
     password: {
       type: String,
-      required: true,
-      select: false,
+      required: true,          // ⚠️ يبقى required
+      select: false,           // لا يُرجع في أي query
     },
 
+    // ✅ flag لإجبار تغيير كلمة المرور أول دخول
     mustChangePassword: {
       type: Boolean,
       default: true,
