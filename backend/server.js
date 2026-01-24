@@ -34,19 +34,21 @@ app.use(morgan("dev"));
 app.use(express.json());
 
 /* ======================
-   CORS (نهائي)
+   CORS (FIXED & SAFE)
 ====================== */
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174", // ✅ Vite غير المنفذ
   "http://localhost:3000",
-  "https://basira-frontend.vercel.app",
+  "https://basirah-final.vercel.app", // ✅ الفرونت الجديد
 ];
 
-const vercelPreviewRegex = /^https:\/\/basira-frontend-.*\.vercel\.app$/;
+const vercelPreviewRegex = /^https:\/\/.*\.vercel\.app$/;
 
 app.use(
   cors({
     origin: (origin, callback) => {
+      // يسمح بطلبات السيرفر نفسها (Postman / Render health check)
       if (!origin) return callback(null, true);
 
       if (
@@ -56,13 +58,16 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(new Error(`CORS blocked origin: ${origin}`));
+      return callback(null, false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// ✅ هذا السطر كان ناقصك (مهم جدًا)
+app.options("*", cors());
 
 /* ======================
    Static Files
@@ -88,10 +93,7 @@ app.use("/api/v1/admin/payments", adminPaymentRoutes);
 app.use("/api/v1/doctor", doctorRoutes);
 
 // Center
-// 🔴 auth فقط منفصل
 app.use("/api/v1/center/auth", centerAuthRoutes);
-
-// 🟢 كل باقي Routes من index.js
 app.use("/api/v1/center", centerRoutes);
 
 /* ======================
