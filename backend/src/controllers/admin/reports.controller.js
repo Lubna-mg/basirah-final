@@ -4,25 +4,18 @@ import Patient from "../../models/Patient.js";
 import Test from "../../models/Test.js";
 import PDFDocument from "pdfkit";
 
-export const downloadReportPdf = async (req, res) => {
+export const downloadAdminReportPdf = async (req, res) => {
   try {
-    const { centerId } = req.params;  // معرف المركز
-
-    // جلب بيانات المركز
-    const center = await Center.findById(centerId);
-    if (!center) {
-      return res.status(404).json({ message: "المركز غير موجود" });
-    }
-
-    // الإحصائيات الخاصة بالمركز
-    const doctorsCount = await Doctor.countDocuments({ center: centerId });
-    const patientsCount = await Patient.countDocuments({ center: centerId });
-    const testsCount = await Test.countDocuments({ center: centerId });
+    // ===== إحصائيات المنصة =====
+    const centersCount = await Center.countDocuments();
+    const doctorsCount = await Doctor.countDocuments();
+    const patientsCount = await Patient.countDocuments();
+    const testsCount = await Test.countDocuments();
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `inline; filename=center-report-${center._id}.pdf`
+      "inline; filename=admin-platform-report.pdf"
     );
 
     const doc = new PDFDocument({ size: "A4", margin: 50 });
@@ -31,60 +24,74 @@ export const downloadReportPdf = async (req, res) => {
     /* ================= Header ================= */
     doc
       .fillColor("#0A2A43")
-      .fontSize(22)
+      .fontSize(20)
       .font("Helvetica-Bold")
-      .text("Basira Medical Platform", { align: "left" });
+      .text("بصيرة", { align: "right" });
 
     doc
-      .moveDown(0.3)
-      .fontSize(14)
+      .fontSize(10)
       .font("Helvetica")
       .fillColor("#475569")
-      .text(`تقرير مركز: ${center.name}`);
+      .text("Basira Medical Platform", { align: "right" });
 
+    doc.moveDown(2);
+
+    /* ================= Title ================= */
     doc
-      .moveDown(0.2)
-      .fontSize(10)
-      .text(`تاريخ التقرير: ${new Date().toLocaleString("ar-SA")}`);
-
-    doc.moveDown(1.5);
-
-    /* ================= Center Info ================= */
-    doc
-      .fontSize(12)
-      .fillColor("#475569")
-      .text(`المدينة: ${center.city || "-"}`);
-    doc.text(`البريد الإلكتروني: ${center.email}`);
-    doc.text(`رقم الهاتف: ${center.phone}`);
-    doc.text(`حالة الاشتراك: ${center.subscriptionPlan}`);
-    doc.text(
-      `تاريخ الاشتراك: ${
-        center.subscriptionEndDate
-          ? new Date(center.subscriptionEndDate).toLocaleDateString("ar-SA")
-          : "غير محدد"
-      }`
-    );
-
-    doc.moveDown(1.5);
-
-    /* ================= Stats ================= */
-    doc
-      .fontSize(13)
+      .fontSize(18)
       .font("Helvetica-Bold")
       .fillColor("#0A2A43")
-      .text("الإحصائيات");
+      .text("التقرير الإداري - ملخص المنصة", {
+        align: "center",
+      });
+
+    doc.moveDown(2);
+
+    /* ================= Info ================= */
+    doc
+      .fontSize(12)
+      .font("Helvetica")
+      .fillColor("#475569")
+      .text(`تاريخ التقرير: ${new Date().toLocaleDateString("ar-SA")}`)
+      .moveDown(0.5);
+
+    doc.moveDown(1.5);
+
+    /* ================= Summary ================= */
+    doc
+      .fontSize(14)
+      .font("Helvetica-Bold")
+      .fillColor("#0A2A43")
+      .text("ملخص إداري");
 
     doc.moveDown(0.5);
 
     doc
-      .fontSize(12)
+      .fontSize(11)
       .font("Helvetica")
       .fillColor("#475569")
-      .text(`عدد الأطباء: ${doctorsCount}`);
-    doc.text(`عدد المرضى: ${patientsCount}`);
-    doc.text(`عدد الفحوصات: ${testsCount}`);
+      .text(
+        "يعرض هذا التقرير نظرة عامة على حالة منصة بصيرة، ويهدف إلى دعم اتخاذ القرار الإداري ومتابعة أداء المنصة من حيث عدد المستخدمين والمراكز والفحوصات."
+      );
 
     doc.moveDown(1.5);
+
+    /* ================= Statistics ================= */
+    doc
+      .fontSize(14)
+      .font("Helvetica-Bold")
+      .fillColor("#0A2A43")
+      .text("إحصائيات المنصة");
+
+    doc.moveDown(0.8);
+
+    doc.fontSize(12).font("Helvetica").fillColor("#475569");
+    doc.text(`عدد المراكز المسجلة: ${centersCount}`);
+    doc.text(`عدد الأطباء: ${doctorsCount}`);
+    doc.text(`عدد المرضى: ${patientsCount}`);
+    doc.text(`عدد الفحوصات المنفذة: ${testsCount}`);
+
+    doc.moveDown(2);
 
     /* ================= Footer ================= */
     doc
@@ -93,21 +100,21 @@ export const downloadReportPdf = async (req, res) => {
       .strokeColor("#e5e7eb")
       .stroke();
 
-    doc.moveDown(0.8);
+    doc.moveDown(1);
 
     doc
       .fontSize(9)
       .fillColor("#64748b")
       .text(
-        "تم إنشاء التقرير بتاريخ: " + new Date().toLocaleString("ar-SA"),
+        "تنويه: هذا التقرير إداري داعم لاتخاذ القرار ولا يغني عن التحليل التشغيلي التفصيلي للمنصة.",
         { align: "center" }
       );
 
     doc.end();
   } catch (error) {
-    console.error("downloadReportPdf error:", error);
+    console.error("downloadAdminReportPdf error:", error);
     res.status(500).json({
-      message: "فشل إنشاء التقرير",
+      message: "فشل إنشاء التقرير الإداري",
     });
   }
 };

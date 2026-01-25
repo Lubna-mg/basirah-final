@@ -12,12 +12,14 @@ export default function requireAdmin(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // ✅ التأكد من أن التوكن يحتوي على دور "admin"
+    // ✅ تأكيد الدور
     if (decoded.role !== "admin") {
       return res.status(403).json({ message: "ليس أدمن" });
     }
 
-    req.adminId = decoded.id; // أو يمكنك استخدام decoded.adminId إذا كان هناك
+    // ✅ مرونة في قراءة الـ id
+    req.adminId = decoded.id || decoded.adminId;
+
     next();
   } catch (error) {
     return res.status(403).json({ message: "توكن غير صالح" });

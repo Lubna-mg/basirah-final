@@ -1,15 +1,14 @@
 import express from "express";
 import requireAdmin from "../../middleware/requireAdmin.js";
-import { downloadReportPdf } from "../../controllers/admin/reports.controller.js";
+import { downloadAdminReportPdf } from "../../controllers/admin/reports.controller.js";
 
 const router = express.Router();
 
-// PDF Report
-// تعديل المسار ليشمل centerId
+// ✅ تقرير إداري عام (بدون centerId)
 router.get(
-  "/:centerId/center-summary/pdf",  // تم إضافة :centerId هنا
+  "/admin-summary",
   requireAdmin,
-  downloadReportPdf
+  downloadAdminReportPdf
 );
 
 export default router;

@@ -1,29 +1,24 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "../../layouts/AdminLayout";
 import { FaFilePdf, FaChartBar } from "react-icons/fa";
-import { useParams } from "react-router-dom";
 
 export default function AdminReports() {
-  const { centerId } = useParams(); // جلب centerId من الـ URL
   const [reports, setReports] = useState([]);
+  const API_BASE = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    if (centerId) {
-      // تقرير مخصص للمركز بناءً على الـ centerId
-      setReports([
-        {
-          id: "center-summary",
-          title: `تقرير مركز ${centerId}`,
-          type: "إداري",
-          period: "حالي",
-          createdAt: new Date(),
-          downloadUrl: `/api/v1/admin/reports/${centerId}/center-summary/pdf`, // رابط التقرير الخاص بالمركز
-        },
-      ]);
-    }
-  }, [centerId]);
-
-  const API_BASE = import.meta.env.VITE_API_URL;
+    // ✅ تقرير إداري عام (بدون centerId)
+    setReports([
+      {
+        id: "admin-summary",
+        title: "التقرير الإداري - ملخص المنصة",
+        type: "إداري",
+        period: "حالي",
+        createdAt: new Date(),
+        downloadUrl: "/api/v1/admin/reports/admin-summary",
+      },
+    ]);
+  }, []);
 
   return (
     <AdminLayout>
@@ -31,7 +26,7 @@ export default function AdminReports() {
         {/* Header */}
         <header>
           <h2 className="text-2xl font-bold text-[#0A2A43] flex items-center gap-2">
-            <FaChartBar className="text-[#0A2A43]" />
+            <FaChartBar />
             التقارير
           </h2>
           <p className="text-sm text-gray-500 mt-1">
@@ -41,7 +36,10 @@ export default function AdminReports() {
 
         {/* Summary */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <SummaryCard label="عدد التقارير المتاحة" value={reports.length} />
+          <SummaryCard
+            label="عدد التقارير المتاحة"
+            value={reports.length}
+          />
         </section>
 
         {/* Table */}
@@ -58,7 +56,7 @@ export default function AdminReports() {
             </thead>
             <tbody>
               {reports.map((r) => (
-                <tr key={r.id} className="border-b last:border-none">
+                <tr key={r.id}>
                   <td className="py-3 px-4 font-semibold text-[#0A2A43]">
                     {r.title}
                   </td>
@@ -82,12 +80,6 @@ export default function AdminReports() {
               ))}
             </tbody>
           </table>
-
-          {reports.length === 0 && (
-            <div className="p-6 text-center text-sm text-gray-400">
-              لا توجد تقارير حالياً
-            </div>
-          )}
         </section>
       </div>
     </AdminLayout>
