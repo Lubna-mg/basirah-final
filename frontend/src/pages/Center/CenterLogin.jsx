@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHospitalUser, FaEye, FaEyeSlash } from "react-icons/fa";
-import api from "../../services/api"; // ✅ axios الموحّد
+import api from "../../api/centerApi";
+
 
 export default function CenterLogin() {
   const navigate = useNavigate();

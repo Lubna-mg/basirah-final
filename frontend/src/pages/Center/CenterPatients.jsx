@@ -1,6 +1,7 @@
 import CenterLayout from "../../layouts/CenterLayout";
 import { useEffect, useState } from "react";
-import api from "../../api/axios";
+import api from "../../api/centerApi";
+
 import { FaUserPlus } from "react-icons/fa";
 
 export default function CenterPatients() {

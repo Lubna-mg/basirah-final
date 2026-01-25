@@ -1,7 +1,8 @@
 import CenterLayout from "../../layouts/CenterLayout";
 import { FaClipboardList, FaSearch } from "react-icons/fa";
 import { useEffect, useMemo, useState } from "react";
-import api from "../../services/api"; // ✅ axios الموحّد
+import api from "../../api/centerApi";
+
 
 export default function CenterReports() {
   const [reports, setReports] = useState([]);

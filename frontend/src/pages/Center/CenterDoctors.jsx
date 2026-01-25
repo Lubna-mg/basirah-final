@@ -1,7 +1,8 @@
 import CenterLayout from "../../layouts/CenterLayout";
 import { FaUserMd, FaSearch, FaPlus } from "react-icons/fa";
 import { useEffect, useMemo, useState } from "react";
-import api from "../../api/axios";
+import api from "../../api/centerApi";
+
 
 export default function CenterDoctors() {
   const [doctors, setDoctors] = useState([]);
