@@ -1,10 +1,11 @@
 import axios from "axios";
 
-const centerApi = axios.create({
+const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api/v1`,
 });
 
-centerApi.interceptors.request.use(
+// 🔐 Interceptor خاص بالمركز فقط
+api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("centerToken");
 
@@ -17,4 +18,4 @@ centerApi.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-export default centerApi;
+export default api;
