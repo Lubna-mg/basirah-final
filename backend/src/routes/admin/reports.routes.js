@@ -6,7 +6,7 @@ const router = express.Router();
 
 // PDF Report
 router.get(
-  "/centers-summary/pdf",
+  "/centers-overview/pdf",
   requireAdmin,
   downloadReportPdf
 );
