@@ -1,23 +1,27 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "../../layouts/AdminLayout";
 import { FaFilePdf, FaChartBar } from "react-icons/fa";
+import { useParams } from "react-router-dom";
 
 export default function AdminReports() {
+  const { centerId } = useParams(); // جلب centerId من الـ URL
   const [reports, setReports] = useState([]);
 
   useEffect(() => {
-    // تقارير حقيقية مربوطة (كل تقرير له API فعلي)
-    setReports([
-      {
-        id: "centers-summary",
-        title: "ملخص المراكز المسجلة",
-        type: "إداري",
-        period: "حالي",
-        createdAt: new Date(),
-        downloadUrl: "/api/v1/admin/reports/centers-overview/pdf",
-      },
-    ]);
-  }, []);
+    if (centerId) {
+      // تقرير مخصص للمركز بناءً على الـ centerId
+      setReports([
+        {
+          id: "center-summary",
+          title: `تقرير مركز ${centerId}`,
+          type: "إداري",
+          period: "حالي",
+          createdAt: new Date(),
+          downloadUrl: `/api/v1/admin/reports/${centerId}/center-summary/pdf`, // رابط التقرير الخاص بالمركز
+        },
+      ]);
+    }
+  }, [centerId]);
 
   const API_BASE = import.meta.env.VITE_API_URL;
 

@@ -1,24 +1,28 @@
 import Center from "../../models/Center.js";
+import Doctor from "../../models/Doctor.js";
+import Patient from "../../models/Patient.js";
+import Test from "../../models/Test.js";
 import PDFDocument from "pdfkit";
 
 export const downloadReportPdf = async (req, res) => {
   try {
-    const centers = await Center.find().limit(10);
+    const { centerId } = req.params;  // معرف المركز
 
-    const totalCenters = await Center.countDocuments();
-    const activeCenters = await Center.countDocuments({ status: "active" });
-    const pendingCenters = await Center.countDocuments({ status: "pending" });
-    const suspendedCenters = await Center.countDocuments({ status: "suspended" });
+    // جلب بيانات المركز
+    const center = await Center.findById(centerId);
+    if (!center) {
+      return res.status(404).json({ message: "المركز غير موجود" });
+    }
 
-    const activeRate =
-      totalCenters > 0
-        ? ((activeCenters / totalCenters) * 100).toFixed(1)
-        : 0;
+    // الإحصائيات الخاصة بالمركز
+    const doctorsCount = await Doctor.countDocuments({ center: centerId });
+    const patientsCount = await Patient.countDocuments({ center: centerId });
+    const testsCount = await Test.countDocuments({ center: centerId });
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      "attachment; filename=basira-admin-centers-report.pdf"
+      `inline; filename=center-report-${center._id}.pdf`
     );
 
     const doc = new PDFDocument({ size: "A4", margin: 50 });
@@ -36,89 +40,49 @@ export const downloadReportPdf = async (req, res) => {
       .fontSize(14)
       .font("Helvetica")
       .fillColor("#475569")
-      .text("Administrative Centers Report");
+      .text(`تقرير مركز: ${center.name}`);
 
     doc
       .moveDown(0.2)
       .fontSize(10)
-      .text(`Generated at: ${new Date().toLocaleString("en-GB")}`);
+      .text(`تاريخ التقرير: ${new Date().toLocaleString("ar-SA")}`);
 
     doc.moveDown(1.5);
 
-    /* ================= Executive Summary ================= */
+    /* ================= Center Info ================= */
+    doc
+      .fontSize(12)
+      .fillColor("#475569")
+      .text(`المدينة: ${center.city || "-"}`);
+    doc.text(`البريد الإلكتروني: ${center.email}`);
+    doc.text(`رقم الهاتف: ${center.phone}`);
+    doc.text(`حالة الاشتراك: ${center.subscriptionPlan}`);
+    doc.text(
+      `تاريخ الاشتراك: ${
+        center.subscriptionEndDate
+          ? new Date(center.subscriptionEndDate).toLocaleDateString("ar-SA")
+          : "غير محدد"
+      }`
+    );
+
+    doc.moveDown(1.5);
+
+    /* ================= Stats ================= */
     doc
       .fontSize(13)
       .font("Helvetica-Bold")
       .fillColor("#0A2A43")
-      .text("Executive Summary");
+      .text("الإحصائيات");
+
+    doc.moveDown(0.5);
 
     doc
-      .moveDown(0.5)
-      .fontSize(10)
+      .fontSize(12)
       .font("Helvetica")
-      .fillColor("#334155")
-      .text(
-        "This report provides an administrative overview of registered medical centers on the Basira platform. "
-        + "It is intended for operational monitoring, quality assurance, and subscription management purposes."
-      );
-
-    doc.moveDown(1.5);
-
-    /* ================= KPI Boxes ================= */
-    const boxY = doc.y;
-    const boxWidth = 200;
-    const boxHeight = 55;
-
-    const drawBox = (x, y, title, value) => {
-      doc
-        .roundedRect(x, y, boxWidth, boxHeight, 8)
-        .fillAndStroke("#f8fafc", "#e5e7eb");
-
-      doc
-        .fillColor("#64748b")
-        .fontSize(9)
-        .text(title, x + 15, y + 12);
-
-      doc
-        .fillColor("#0A2A43")
-        .fontSize(18)
-        .font("Helvetica-Bold")
-        .text(value, x + 15, y + 28);
-    };
-
-    drawBox(50, boxY, "Total Centers", totalCenters);
-    drawBox(300, boxY, "Active Centers", activeCenters);
-    drawBox(50, boxY + 70, "Pending Centers", pendingCenters);
-    drawBox(300, boxY + 70, "Suspended Centers", suspendedCenters);
-
-    doc.moveDown(6);
-
-    /* ================= Centers Table ================= */
-    doc
-      .fontSize(13)
-      .font("Helvetica-Bold")
-      .fillColor("#0A2A43")
-      .text("Registered Centers Overview");
-
-    doc.moveDown(0.8);
-
-    centers.forEach((c, i) => {
-      doc
-        .fontSize(10)
-        .font("Helvetica-Bold")
-        .fillColor("#0A2A43")
-        .text(`${i + 1}. ${c.name}`);
-
-      doc
-        .fontSize(9)
-        .font("Helvetica")
-        .fillColor("#475569")
-        .text(
-          `City: ${c.city || "-"} | Status: ${c.status} | Plan: ${c.subscriptionPlan || "—"}`
-        );
-
-      doc.moveDown(0.6);
-    });
+      .fillColor("#475569")
+      .text(`عدد الأطباء: ${doctorsCount}`);
+    doc.text(`عدد المرضى: ${patientsCount}`);
+    doc.text(`عدد الفحوصات: ${testsCount}`);
 
     doc.moveDown(1.5);
 
@@ -135,8 +99,7 @@ export const downloadReportPdf = async (req, res) => {
       .fontSize(9)
       .fillColor("#64748b")
       .text(
-        "This report is intended for administrative and operational use only. "
-        + "It does not contain medical or diagnostic data.",
+        "تم إنشاء التقرير بتاريخ: " + new Date().toLocaleString("ar-SA"),
         { align: "center" }
       );
 
@@ -144,7 +107,7 @@ export const downloadReportPdf = async (req, res) => {
   } catch (error) {
     console.error("downloadReportPdf error:", error);
     res.status(500).json({
-      message: "Failed to generate administrative report",
+      message: "فشل إنشاء التقرير",
     });
   }
 };
