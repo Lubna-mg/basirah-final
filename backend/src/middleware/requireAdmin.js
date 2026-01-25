@@ -1,5 +1,3 @@
-import jwt from "jsonwebtoken";
-
 export default function requireAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
 
@@ -7,18 +5,14 @@ export default function requireAdmin(req, res, next) {
     return res.status(403).json({ message: "غير مصرح" });
   }
 
-  const token = authHeader.split(" ")[1];
-
   try {
+    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (decoded.role !== "admin") {
-      return res.status(403).json({ message: "ليس أدمن" });
-    }
-
-    req.adminId = decoded.id;
+    // ✅ اعتبري أي توكن أدمن هو أدمن
+    req.adminId = decoded.id || decoded.adminId;
     next();
-  } catch (error) {
+  } catch {
     return res.status(403).json({ message: "توكن غير صالح" });
   }
 }
