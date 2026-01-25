@@ -1,6 +1,10 @@
 import jwt from "jsonwebtoken";
 
 export default function authCenter(req, res, next) {
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+console.log("🔑 decoded token:", decoded);
+
   try {
     const authHeader = req.headers.authorization;
 

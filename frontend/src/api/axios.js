@@ -8,7 +8,6 @@ api.interceptors.request.use(
   (config) => {
     // 🔐 نختار التوكن حسب الموجود
     const token =
-      localStorage.getItem("centerToken") ||
       localStorage.getItem("adminToken") ||
       localStorage.getItem("doctorToken");
 
