@@ -1,3 +1,5 @@
+import jwt from "jsonwebtoken";
+
 export default function requireAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
 
@@ -5,14 +7,19 @@ export default function requireAdmin(req, res, next) {
     return res.status(403).json({ message: "غير مصرح" });
   }
 
+  const token = authHeader.split(" ")[1];
+
   try {
-    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // ✅ اعتبري أي توكن أدمن هو أدمن
-    req.adminId = decoded.id || decoded.adminId;
+    // ✅ التأكد من أن التوكن يحتوي على دور "admin"
+    if (decoded.role !== "admin") {
+      return res.status(403).json({ message: "ليس أدمن" });
+    }
+
+    req.adminId = decoded.id; // أو يمكنك استخدام decoded.adminId إذا كان هناك
     next();
-  } catch {
+  } catch (error) {
     return res.status(403).json({ message: "توكن غير صالح" });
   }
 }
