@@ -7,8 +7,8 @@ import settingsRoutes from "./settings.routes.js";
 import reportRoutes from "./report.routes.js";
 import appointmentRoutes from "./appointment.routes.js";
 import subscriptionRoutes from "./subscription.routes.js";
+import dashboardRoutes from "./dashboard.routes.js";
 
-import { getCenterDashboard } from "../../controllers/center/dashboard.controller.js";
 import { getMySubscription } from "../../controllers/center/subscription.controller.js";
 
 const router = Router();
@@ -16,7 +16,7 @@ const router = Router();
 /* ======================
    Dashboard
 ====================== */
-router.get("/dashboard", authCenter, getCenterDashboard);
+router.use("/dashboard", authCenter, dashboardRoutes);
 
 /* ======================
    Subscription
