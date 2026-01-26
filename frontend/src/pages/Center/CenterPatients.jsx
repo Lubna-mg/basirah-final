@@ -1,7 +1,6 @@
 import CenterLayout from "../../layouts/CenterLayout";
 import { useEffect, useState } from "react";
 import api from "../../api/centerApi";
-
 import { FaUserPlus } from "react-icons/fa";
 
 export default function CenterPatients() {
@@ -16,7 +15,7 @@ export default function CenterPatients() {
     name: "",
     age: "",
     gender: "",
-    doctor: "", // ✅ نخزن id الطبيب
+    doctor: "", // ObjectId
   });
 
   /* ======================
@@ -54,7 +53,7 @@ export default function CenterPatients() {
         name: form.name,
         age: Number(form.age),
         gender: form.gender,
-        doctor: form.doctor, // ✅ ObjectId صحيح
+        doctor: form.doctor, // ObjectId صحيح
       });
 
       setPatients((prev) => [res.data.patient, ...prev]);
@@ -159,9 +158,8 @@ export default function CenterPatients() {
                 >
                   <option value="">اختر الطبيب</option>
 
-                  {/* ⭐⭐ التصحيح هنا ⭐⭐ */}
                   {doctors.map((d) => (
-                    <option key={d.id} value={d.id}>
+                    <option key={d._id} value={d._id}>
                       {d.name}
                     </option>
                   ))}
