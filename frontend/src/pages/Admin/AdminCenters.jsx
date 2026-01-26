@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../layouts/AdminLayout";
-import api from "../../services/api"; // ✅ مهم
+import api from "../../services/api";
 import { FaMapMarkerAlt, FaPlus, FaTrash, FaEdit } from "react-icons/fa";
 
 /* =========================
-   Constants
+   Constants (مطابقة للـ Schema)
 ========================= */
 const STATUS_OPTIONS = [
   { value: "بانتظار التفعيل", label: "بانتظار التفعيل" },
-  { value: "مفعل", label: "مفعّل" },
-  { value: "موقوف", label: "موقّف" },
+  { value: "مفعّل", label: "مفعّل" },
+  { value: "موقّف", label: "موقّف" },
 ];
 
 const PLAN_OPTIONS = [
@@ -19,9 +19,6 @@ const PLAN_OPTIONS = [
   { value: "سنوية", label: "سنوية" },
 ];
 
-/* =========================
-   Component
-========================= */
 export default function AdminCenters() {
   const navigate = useNavigate();
 
@@ -37,11 +34,10 @@ export default function AdminCenters() {
   const [form, setForm] = useState({
     name: "",
     city: "",
-    address: "",
     contactEmail: "",
     contactPhone: "",
-    subscriptionPlan: "تجريبي",
     status: "بانتظار التفعيل",
+    subscriptionPlan: "تجريبي",
   });
 
   /* =========================
@@ -50,8 +46,6 @@ export default function AdminCenters() {
   const fetchCenters = async () => {
     try {
       setLoading(true);
-      setError("");
-
       const res = await api.get("/admin/centers");
       setCenters(res.data.centers || []);
     } catch (err) {
@@ -76,11 +70,10 @@ export default function AdminCenters() {
     setForm({
       name: "",
       city: "",
-      address: "",
       contactEmail: "",
       contactPhone: "",
-      subscriptionPlan: "تجريبي",
       status: "بانتظار التفعيل",
+      subscriptionPlan: "تجريبي",
     });
     setMode("add");
     setEditingId(null);
@@ -97,8 +90,8 @@ export default function AdminCenters() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name || !form.contactEmail) {
-      setError("اسم المركز والبريد الإلكتروني مطلوبان");
+    if (!form.name || !form.contactEmail || !form.contactPhone) {
+      setError("اسم المركز، البريد الإلكتروني، ورقم الجوال مطلوبة");
       return;
     }
 
@@ -107,9 +100,22 @@ export default function AdminCenters() {
       setError("");
 
       if (mode === "edit") {
-        await api.put(`/admin/centers/${editingId}`, form);
+        // في التعديل نرسل كل القيم المسموحة
+        await api.put(`/admin/centers/${editingId}`, {
+          name: form.name,
+          city: form.city,
+          contactEmail: form.contactEmail,
+          contactPhone: form.contactPhone,
+          status: form.status,
+        });
       } else {
-        await api.post("/admin/centers", form);
+        // في الإضافة نرسل أقل شي (عشان ما نكسر الـ schema)
+        await api.post("/admin/centers", {
+          name: form.name,
+          city: form.city,
+          contactEmail: form.contactEmail,
+          contactPhone: form.contactPhone,
+        });
       }
 
       await fetchCenters();
@@ -128,11 +134,10 @@ export default function AdminCenters() {
     setForm({
       name: center.name || "",
       city: center.city || "",
-      address: center.address || "",
       contactEmail: center.contactEmail || "",
       contactPhone: center.contactPhone || "",
-      subscriptionPlan: center.subscriptionPlan || "تجريبي",
       status: center.status || "بانتظار التفعيل",
+      subscriptionPlan: center.subscriptionPlan || "تجريبي",
     });
     setShowForm(true);
   };
@@ -187,28 +192,69 @@ export default function AdminCenters() {
             onSubmit={handleSubmit}
             className="bg-white border rounded-xl p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
           >
-            <input name="name" placeholder="اسم المركز" value={form.name} onChange={handleChange} className="border p-2 rounded" required />
-            <input name="city" placeholder="المدينة" value={form.city} onChange={handleChange} className="border p-2 rounded" />
-            <input name="contactEmail" placeholder="البريد الإلكتروني" value={form.contactEmail} onChange={handleChange} className="border p-2 rounded" required />
-            <input name="contactPhone" placeholder="رقم الجوال" value={form.contactPhone} onChange={handleChange} className="border p-2 rounded" />
+            <input
+              name="name"
+              placeholder="اسم المركز"
+              value={form.name}
+              onChange={handleChange}
+              className="border p-2 rounded"
+              required
+            />
 
-            <select name="subscriptionPlan" value={form.subscriptionPlan} onChange={handleChange} className="border p-2 rounded">
-              {PLAN_OPTIONS.map((p) => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </select>
+            <input
+              name="city"
+              placeholder="المدينة"
+              value={form.city}
+              onChange={handleChange}
+              className="border p-2 rounded"
+            />
 
-            <select name="status" value={form.status} onChange={handleChange} className="border p-2 rounded">
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
+            <input
+              name="contactEmail"
+              placeholder="البريد الإلكتروني"
+              value={form.contactEmail}
+              onChange={handleChange}
+              className="border p-2 rounded"
+              required
+            />
+
+            <input
+              name="contactPhone"
+              placeholder="رقم الجوال"
+              value={form.contactPhone}
+              onChange={handleChange}
+              className="border p-2 rounded"
+              required
+            />
+
+            {mode === "edit" && (
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                className="border p-2 rounded"
+              >
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            )}
 
             <div className="md:col-span-2 flex justify-end gap-3">
-              <button type="button" onClick={() => setShowForm(false)} className="border px-4 py-2 rounded">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="border px-4 py-2 rounded"
+              >
                 إلغاء
               </button>
-              <button type="submit" disabled={saving} className="bg-[#0A2A43] text-white px-4 py-2 rounded">
+              <button
+                type="submit"
+                disabled={saving}
+                className="bg-[#0A2A43] text-white px-4 py-2 rounded"
+              >
                 {saving ? "جارٍ الحفظ..." : "حفظ"}
               </button>
             </div>
@@ -226,7 +272,10 @@ export default function AdminCenters() {
         {!loading && centers.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {centers.map((center) => (
-              <div key={center.id} className="bg-white border rounded-xl p-5 flex flex-col gap-3">
+              <div
+                key={center.id}
+                className="bg-white border rounded-xl p-5 flex flex-col gap-3"
+              >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-bold">{center.name}</h3>
@@ -240,10 +289,16 @@ export default function AdminCenters() {
                 </div>
 
                 <div className="flex justify-end gap-3">
-                  <button onClick={() => handleEdit(center)} className="text-indigo-600">
+                  <button
+                    onClick={() => handleEdit(center)}
+                    className="text-indigo-600"
+                  >
                     <FaEdit />
                   </button>
-                  <button onClick={() => handleDelete(center.id)} className="text-red-600">
+                  <button
+                    onClick={() => handleDelete(center.id)}
+                    className="text-red-600"
+                  >
                     <FaTrash />
                   </button>
                 </div>

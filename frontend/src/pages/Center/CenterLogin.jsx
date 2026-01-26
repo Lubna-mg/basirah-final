@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { FaHospitalUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import api from "../../api/centerApi";
 
-
 export default function CenterLogin() {
   const navigate = useNavigate();
 
@@ -13,6 +12,9 @@ export default function CenterLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  /* ======================
+     لو عنده توكن → دخليه مباشرة
+  ====================== */
   useEffect(() => {
     const token = localStorage.getItem("centerToken");
     if (token) {
@@ -20,6 +22,9 @@ export default function CenterLogin() {
     }
   }, [navigate]);
 
+  /* ======================
+     تسجيل الدخول
+  ====================== */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -31,6 +36,14 @@ export default function CenterLogin() {
         password: password.trim(),
       });
 
+      /* 🔴 حالة مركز لازم يغير كلمة المرور */
+      if (res.data.message === "MUST_CHANGE_PASSWORD") {
+        localStorage.setItem("tempCenterId", res.data.centerId);
+        navigate("/center-change-password");
+        return;
+      }
+
+      /* ✅ تسجيل دخول طبيعي */
       localStorage.setItem("centerToken", res.data.token);
       localStorage.setItem(
         "centerInfo",
@@ -50,6 +63,7 @@ export default function CenterLogin() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F4F9FD] to-[#DCE6F2]">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+
         {/* Header */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 flex items-center justify-center rounded-full bg-[#0A2A43] text-white mb-4">
@@ -59,7 +73,7 @@ export default function CenterLogin() {
             تسجيل دخول المركز
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            الدخول لإدارة الأطباء والاشتراكات
+            الدخول لإدارة الأطباء والمرضى
           </p>
         </div>
 
