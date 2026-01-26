@@ -30,6 +30,7 @@ export async function listCenters(req, res) {
 
 /* =======================
    إضافة مركز جديد
+   🔥 بدون شرط تغيير كلمة المرور
 ======================= */
 export async function createCenter(req, res) {
   try {
@@ -46,6 +47,7 @@ export async function createCenter(req, res) {
     contactPhone = contactPhone.trim();
     city = city?.trim() || "";
 
+    // منع التكرار
     const exists = await Center.findOne({
       $or: [{ email: contactEmail }, { phone: contactPhone }],
     });
@@ -56,6 +58,7 @@ export async function createCenter(req, res) {
       });
     }
 
+    // كلمة مرور افتراضية
     const tempPassword = "123456";
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
@@ -65,11 +68,15 @@ export async function createCenter(req, res) {
       phone: contactPhone,
       city,
       password: hashedPassword,
+
+      // 🔥 الحل هنا
+      mustChangePassword: false,
+
       status: "مفعّل",
       subscriptionPlan: "تجريبي",
     });
 
-    // Activity اختياري
+    // Activity (اختياري)
     Activity.create({
       text: `تم إضافة مركز جديد: ${center.name}`,
     }).catch(() => {});
@@ -83,6 +90,9 @@ export async function createCenter(req, res) {
       status: center.status,
       subscriptionPlan: center.subscriptionPlan,
       createdAt: center.createdAt,
+
+      // للاختبار فقط
+      tempPassword,
     });
   } catch (err) {
     console.error("🔥 CREATE CENTER ERROR 🔥");
