@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Patient from "../../models/Patient.js";
 import Doctor from "../../models/Doctor.js";
+import { generateFileNumber } from "../../utils/generateFileNumber.js";
 
 /* =========================
    GET /api/v1/center/patients
@@ -22,10 +23,12 @@ export const getCenterPatients = async (req, res) => {
 
 /* =========================
    POST /api/v1/center/patients
-   ✅ حل مؤقت (بدون ربط الطبيب بالمركز)
 ========================= */
 export const createPatient = async (req, res) => {
   try {
+    console.log("🟢 CENTER ID FROM TOKEN:", req.centerId);
+    console.log("🟢 DOCTOR ID FROM BODY:", req.body.doctor);
+
     const centerId = req.centerId;
     const { name, age, gender, doctor } = req.body;
 
@@ -36,32 +39,38 @@ export const createPatient = async (req, res) => {
       });
     }
 
-    // تحقق من ObjectId
+    // تحقق من ObjectId الطبيب
     if (!mongoose.Types.ObjectId.isValid(doctor)) {
       return res.status(400).json({
         message: "الطبيب المحدد غير صالح",
       });
     }
 
-    // ✅ تحقق مؤقت: الطبيب موجود فقط (بدون center)
+    // تحقق أن الطبيب موجود
     const doctorExists = await Doctor.findById(doctor);
-
     if (!doctorExists) {
       return res.status(400).json({
         message: "الطبيب غير موجود",
       });
     }
 
-    // توليد رقم ملف خاص بالمركز
-    const count = await Patient.countDocuments({ center: centerId });
-    const file_number = `P-${String(count + 1).padStart(4, "0")}`;
+    // تأكد أن الطبيب تابع لنفس المركز
+    if (doctorExists.center.toString() !== centerId) {
+      return res.status(400).json({
+        message: "الطبيب لا يتبع هذا المركز",
+      });
+    }
 
+    // توليد رقم ملف آمن
+    const file_number = await generateFileNumber(Patient, centerId);
+
+    // إنشاء المريض
     const patient = await Patient.create({
       name,
       age,
       gender,
-      doctor,          // ObjectId
-      center: centerId, // ربط المريض بالمركز
+      doctor,
+      center: centerId,
       file_number,
     });
 

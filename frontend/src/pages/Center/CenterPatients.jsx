@@ -16,6 +16,7 @@ export default function CenterPatients() {
     age: "",
     gender: "",
     doctor: "", // ObjectId
+    
   });
 
   /* ======================
