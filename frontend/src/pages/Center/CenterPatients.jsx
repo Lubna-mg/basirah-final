@@ -8,7 +8,6 @@ export default function CenterPatients() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [showForm, setShowForm] = useState(false);
 
   const [form, setForm] = useState({
@@ -42,7 +41,7 @@ export default function CenterPatients() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
+    console.log("SENDING DOCTOR ID 👉", form.doctor);
     if (!form.name || !form.age || !form.gender || !form.doctor) {
       setError("يرجى تعبئة جميع الحقول");
       return;
