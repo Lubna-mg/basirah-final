@@ -1,18 +1,13 @@
-import mongoose from "mongoose";
-
+// backend/src/utils/generateFileNumber.js
 export const generateFileNumber = async (Patient, centerId) => {
-  const lastPatient = await Patient.findOne({ center: centerId })
-    .sort({ createdAt: -1 })
-    .select("file_number");
+  try {
+    const count = await Patient.countDocuments({ center: centerId });
 
-  if (!lastPatient || !lastPatient.file_number) {
-    return "CTR-0001";
+    const safeCount = Number.isFinite(count) ? count : 0;
+
+    return `CTR-${String(safeCount + 1).padStart(4, "0")}`;
+  } catch (err) {
+    console.error("❌ generateFileNumber error:", err);
+    throw new Error("FAILED_TO_GENERATE_FILE_NUMBER");
   }
-
-  const lastNumber = parseInt(
-    lastPatient.file_number.replace("CTR-", ""),
-    10
-  );
-
-  return `CTR-${String(lastNumber + 1).padStart(4, "0")}`;
 };
