@@ -1,13 +1,11 @@
 // backend/src/utils/generateFileNumber.js
-export const generateFileNumber = async (Patient, centerId) => {
-  try {
-    const count = await Patient.countDocuments({ center: centerId });
+import mongoose from "mongoose";
 
-    const safeCount = Number.isFinite(count) ? count : 0;
+export const generateFileNumber = async () => {
+  const shortId = new mongoose.Types.ObjectId()
+    .toString()
+    .slice(-6)
+    .toUpperCase();
 
-    return `CTR-${String(safeCount + 1).padStart(4, "0")}`;
-  } catch (err) {
-    console.error("❌ generateFileNumber error:", err);
-    throw new Error("FAILED_TO_GENERATE_FILE_NUMBER");
-  }
+  return `CTR-${shortId}`;
 };

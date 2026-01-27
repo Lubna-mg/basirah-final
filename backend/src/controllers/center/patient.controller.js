@@ -75,7 +75,7 @@ export const createPatient = async (req, res) => {
 
     while (!patient && attempts < 3) {
       try {
-        const file_number = await generateFileNumber(Patient, centerId);
+        const file_number = await generateFileNumber();
 
         patient = await Patient.create({
           name: name.trim(),
