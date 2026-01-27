@@ -159,10 +159,10 @@ export default function CenterPatients() {
                   <option value="">اختر الطبيب</option>
 
                   {doctors.map((d) => (
-                    <option key={d._id} value={d._id}>
-                      {d.name}
-                    </option>
-                  ))}
+                  <option key={d._id} value={d._id}>
+                    {d.name}
+                  </option>
+                ))}
                 </select>
               </div>
             </div>
