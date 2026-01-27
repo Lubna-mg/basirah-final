@@ -39,7 +39,15 @@ export const createPatient = async (req, res) => {
       });
     }
 
-    // تحقق من ObjectId الطبيب
+    // تحقق العمر
+    const ageNumber = Number(age);
+    if (Number.isNaN(ageNumber) || ageNumber <= 0) {
+      return res.status(400).json({
+        message: "العمر غير صالح",
+      });
+    }
+
+    // تحقق ObjectId الطبيب
     if (!mongoose.Types.ObjectId.isValid(doctor)) {
       return res.status(400).json({
         message: "الطبيب المحدد غير صالح",
@@ -61,20 +69,37 @@ export const createPatient = async (req, res) => {
       });
     }
 
-    // توليد رقم ملف آمن
-    const file_number = await generateFileNumber(Patient, centerId);
+    // إنشاء المريض مع إعادة المحاولة لو حصل duplicate
+    let patient;
+    let attempts = 0;
 
-    // إنشاء المريض
-    const patient = await Patient.create({
-      name,
-      age,
-      gender,
-      doctor,
-      center: centerId,
-      file_number,
-    });
+    while (!patient && attempts < 3) {
+      try {
+        const file_number = await generateFileNumber(Patient, centerId);
 
-    // إرجاع المريض مع اسم الطبيب
+        patient = await Patient.create({
+          name: name.trim(),
+          age: ageNumber,
+          gender,
+          doctor,
+          center: centerId,
+          file_number,
+        });
+      } catch (err) {
+        if (err.code === 11000) {
+          attempts++;
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    if (!patient) {
+      return res.status(500).json({
+        message: "فشل توليد رقم ملف فريد",
+      });
+    }
+
     const populatedPatient = await Patient.findById(patient._id)
       .populate("doctor", "name");
 
