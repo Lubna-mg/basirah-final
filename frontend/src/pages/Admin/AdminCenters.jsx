@@ -100,21 +100,22 @@ export default function AdminCenters() {
       setError("");
 
       if (mode === "edit") {
-        // في التعديل نرسل كل القيم المسموحة
         await api.put(`/admin/centers/${editingId}`, {
           name: form.name,
           city: form.city,
           contactEmail: form.contactEmail,
           contactPhone: form.contactPhone,
           status: form.status,
+          subscriptionPlan: form.subscriptionPlan,
         });
       } else {
-        // في الإضافة نرسل أقل شي (عشان ما نكسر الـ schema)
         await api.post("/admin/centers", {
           name: form.name,
           city: form.city,
           contactEmail: form.contactEmail,
           contactPhone: form.contactPhone,
+          status: form.status,
+          subscriptionPlan: form.subscriptionPlan,
         });
       }
 
@@ -159,6 +160,7 @@ export default function AdminCenters() {
   return (
     <AdminLayout title="إدارة المراكز">
       <div className="flex flex-col gap-6">
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -227,20 +229,33 @@ export default function AdminCenters() {
               required
             />
 
-            {mode === "edit" && (
-              <select
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-                className="border p-2 rounded"
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            )}
+            {/* خطة الاشتراك */}
+            <select
+              name="subscriptionPlan"
+              value={form.subscriptionPlan}
+              onChange={handleChange}
+              className="border p-2 rounded"
+            >
+              {PLAN_OPTIONS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+
+            {/* حالة التفعيل */}
+            <select
+              name="status"
+              value={form.status}
+              onChange={handleChange}
+              className="border p-2 rounded"
+            >
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
 
             <div className="md:col-span-2 flex justify-end gap-3">
               <button
@@ -281,6 +296,9 @@ export default function AdminCenters() {
                     <h3 className="font-bold">{center.name}</h3>
                     <p className="text-sm text-gray-500 flex items-center gap-1">
                       <FaMapMarkerAlt /> {center.city || "—"}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      الباقة: {center.subscriptionPlan || "—"}
                     </p>
                   </div>
                   <span className="px-3 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">
